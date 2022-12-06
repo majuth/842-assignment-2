@@ -1,27 +1,7 @@
-import math
-from collections import defaultdict
-from bs4 import BeautifulSoup
 import json
+from collections import defaultdict
+import math
 from porterStemming import PorterStemmer
-
-NUM_OF_DOCS = 100
-AVG_LEN_DOCS = 14795.75 #for 100 docs where total length is 1479575
-# Code figured out avg document length -> keeping in case we need it again
-# doc_length = []
-# counter = 1
-# with open ('./100Lines.jsonl', encoding="utf-8", errors="ignore") as corpusFile:
-#         for line in corpusFile:
-#             json_doc = json.loads(line)
-#             contents = ' '.join(BeautifulSoup(json_doc['contents'], "html.parser").stripped_strings)
-#             doc_length.append(len(contents))
-#             if counter % 100 == 0:
-#                 print("counter is at " + str(counter)) 
-#             counter += 1
-#         print(doc_length)
-
-# LEN_DOCS = sum(([doc for doc in doc_length]))
-# AVG_LEN_DOCS = LEN_DOCS/NUM_OF_DOCS
-# print("avg doc length is " + str(AVG_LEN_DOCS))
 
 stopwords=[]
 with open('stopwords.txt', 'r') as f:
@@ -29,40 +9,58 @@ with open('stopwords.txt', 'r') as f:
         term = term.split('\n')
         stopwords.append(term[0])
 
-# create a dictionary where key is id and value is the document content
-documents = {}
-with open ('./100Lines.jsonl', encoding="utf-8", errors="ignore") as corpusFile:
-            for line in corpusFile:
-                json_doc = json.loads(line)
-                docID = json_doc['id']
-                contents = ' '.join(BeautifulSoup(json_doc['contents'], "html.parser").stripped_strings)
-                contents_list=contents.split()
-                filtered_terms = []
-                acceptable_characters = set('-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-                for term in contents_list:
-                    answer = ''.join(filter(acceptable_characters.__contains__, term))
-                    filtered_terms.append(answer)
-                documents[docID] = filtered_terms
+# read in dataset
+with open('movies_metadata.json', 'r') as f:
+  corpus = json.load(f)
 
-# inverted index where key is term and value is list of all docid's it's in
+doc_length = []
+doc_contents = {}
+
+for key in corpus.keys():
+    docID = corpus[key]['id']
+    contents = corpus[key]['title'] + " " + corpus[key]['overview']
+    doc_length.append(len(contents))
+    contents_list=contents.split()
+    filtered_terms = []
+    acceptable_characters = set('-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    # filter out punctuation
+    for term in contents_list:
+      answer = ''.join(filter(acceptable_characters.__contains__, term))
+      filtered_terms.append(answer.lower())
+    stemmed_terms=[]
+    # apply stemming
+    for term in filtered_terms:
+      p=PorterStemmer()
+      stemmed_term = []
+      stemmed_term = (p.stem(term, 0, len(term)-1))
+      stemmed_terms.append("".join(stemmed_term))
+      filtered_terms=stemmed_terms
+    # remove stopwords
+    stopwords_removed = [term for term in filtered_terms if term not in stopwords]
+    filtered_terms = stopwords_removed
+    # remove blank list items
+    filtered_terms = (list(filter(None, filtered_terms)))
+    doc_contents[docID] = filtered_terms
+
+NUM_OF_DOCS = len(corpus)
+LEN_DOCS = sum(([doc for doc in doc_length]))
+AVG_LEN_DOCS = LEN_DOCS/NUM_OF_DOCS
+
 inverted_index = defaultdict(set)
-for docid, terms in documents.items():
+for docid, terms in doc_contents.items():
     for term in terms:
-        inverted_index[term.lower()].add(docid)
+        inverted_index[term].add(docid)
 
 def tf_idf_score(k1, b, term, docid):
     # get term frequency by counting length of inverted index
     tf = len(inverted_index[term.lower()])
-    # stem query term and make it lowercase
-    p=PorterStemmer()
-    stemmed_term_list = (p.stem(term, 0, len(term)-1))
-    stemmed_term = ("".join(stemmed_term_list)).lower()
-    # get document frequency by counting number of times term appears in given doc
-    documents_lower = [x.lower() for x in documents[docid]]
-    df = documents_lower.count(stemmed_term)
 
+    # get document frequency by counting number of times term appears in given doc
+    df = doc_contents[str(docid)].count(term)
+
+    # calculate td-idf score
     idf_comp = math.log((NUM_OF_DOCS - tf + 0.5)/(tf+0.5))
-    tf_comp = ((k1 + 1)*df)/(k1*((1-b) + b*(len(list(filter(None, documents[1512303])))/AVG_LEN_DOCS))+df)
+    tf_comp = ((k1 + 1)*df)/(k1*((1-b) + b*(len(list(filter(None, doc_contents[str(docid)])))/AVG_LEN_DOCS))+df)
     return idf_comp * tf_comp
 
 # creates a matrix for all terms
@@ -82,14 +80,38 @@ def retrieve_docs(query, result_count):
     q_terms = [term.lower() for term in query.split() if term not in stopwords]
     query_tf = {}
     for term in q_terms:
-        query_tf[term] = query.get(term, 0) + 1
+        query_tf[term] = query_tf.get(term, 0) + 1
     
     scores = {}
-
     for word in query_tf.keys():
         for document in inverted_index[word]:
-            scores[document] = scores.get(document, 0) + (tf_idf[word][document]*get_query_tf_comp(0,word,query_tf)) #k3 = 0 (default)
+            scores[document] = scores.get(document, 0) + (tf_idf[word][document] * get_query_tf_comp(0,word,query_tf)) #k3 = 0 (default)
     return sorted(scores.items(), key=lambda x : x[1], reverse=True)[:result_count]
 
-# retrieve similarity score for query for first x documents -> convert this to command line input
-retrieve_docs("James Bond", 5)
+queryTerm = ""
+
+while queryTerm != "ZZEND":
+    queryTerm = input("Enter the term you are searching for: ")
+    
+    # stem query
+    queryTerm_stemmed = []
+    for word in queryTerm.split():
+        p=PorterStemmer()
+        queryTerm_list = []
+        queryTerm_list = (p.stem(word, 0, len(word)-1))
+        queryTerm_stemmed.append("".join(queryTerm_list))
+
+    queryTerm_stemmed = ' '.join(queryTerm_stemmed)
+
+    rankings = retrieve_docs(queryTerm_stemmed, 100000)
+    print("There are %d results" %len(rankings))
+    for i in range (0, len(rankings)):
+        if rankings[i][1] > 0:
+            print("BM25 Ranking: %f" %rankings[i][1])
+            docID = rankings[i][0]
+            print("Doc ID: %s" %docID)
+            print("Title:")
+            print(corpus[docID]['title'])
+            print("Overview:")
+            print(corpus[docID]['overview'][:300] + "...")
+            print("\n")
