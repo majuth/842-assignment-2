@@ -42,8 +42,9 @@ def bm25():
             docid = rankings[i][0]
             titles.append(corpus[docid]['title'])
             overviews.append(corpus[docid]['overview'][:300] + "...")
+    length = range(0, num_results)
 
-    return render_template('output.html', n=num_results, r=bm25_rankings, t=titles, o=overviews)
+    return render_template('output.html', n=num_results, r=bm25_rankings, t=titles, o=overviews, l=length)
 
 if __name__=='__main__':
     app.run(host=os.getenv('IP', '0.0.0.0'), 

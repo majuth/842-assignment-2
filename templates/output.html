@@ -8,22 +8,15 @@
 <h1>BM25 Results</h1>
 
 <div id="output">
-    <p>There are {{ n }} results:</p>
-    <p>Rankings {{ r }}</p>
-    <p>Titles {{ t }}</p>
-    <p>Overviews {{ o }}</p>
+    <h2>There are {{n}} results</h2>
+
+    <ul>
+    {% for i in l %}
+  
+    <li> BM25 Ranking: {{r[i]}} <br> Title: {{t[i]}} <br> Overview: {{o[i]}}</li> <br>
+    {% endfor %}
+    </ul>
 </div>
-
-<script>
-var str = '<ul>'
-let titles = '{{ t }}';
-titles.forEach(function(title) {
-  str += '<li>'+ slide + '</li>';
-}); 
-
-str += '</ul>';
-document.getElementById("output").innerHTML = str;
-</script>
 
 </body>
 </html> 
