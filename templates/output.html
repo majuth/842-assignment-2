@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BM25</title>
+</head>
+<body>
+<h1>BM25 Results</h1>
+
+<div id="output">
+    <p>There are {{ n }} results:</p>
+    <p>Rankings {{ r }}</p>
+    <p>Titles {{ t }}</p>
+    <p>Overviews {{ o }}</p>
+</div>
+
+<script>
+var str = '<ul>'
+let titles = '{{ t }}';
+titles.forEach(function(title) {
+  str += '<li>'+ slide + '</li>';
+}); 
+
+str += '</ul>';
+document.getElementById("output").innerHTML = str;
+</script>
+
+</body>
+</html> 
