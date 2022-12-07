@@ -2,6 +2,7 @@ import json
 from collections import defaultdict
 import math
 import pandas as pd
+from sklearn.cluster import KMeans
 
 stopwords=[]
 with open('stopwords.txt', 'r') as f:
