@@ -6,9 +6,9 @@
 </head>
 <body>
     <form action="/" method="post">
-    <button type="submit">Go Back</button>
-    </form>
-<h1>BM25 Search Results</h1>
+        <button type="submit">Go Back</button>
+        </form>
+<h1>Search Results</h1>
 
 <div id="output">
     <h2>There are {{n}} results</h2>
@@ -16,7 +16,7 @@
     <ul>
     {% for i in l %}
   
-    <li>BM25 Ranking: {{r[i]}} <br> Title: {{t[i]}} <br> Overview: {{o[i]}}</li> <br>
+    <li> Title: {{t[i]}} <br> Overview: {{o[i]}}</li> <br>
     {% endfor %}
     </ul>
 </div>

@@ -65,7 +65,7 @@ def createProbailityMatrix(alpha, docContents):
 
 matrix = createProbailityMatrix(ALPHA, doc_contents)
 
-def retrieve_docs(alpha, query, result_count):
+def retrieve_docsNB(alpha, query, result_count):
     possibleDocuments = set()
     for word in query.split():
         if word in matrix:
@@ -84,31 +84,31 @@ def retrieve_docs(alpha, query, result_count):
     #print("Valid scores: " + str(scores))
     return sorted(scores.items(), key=lambda x : x[1], reverse=True)[:result_count]
 
-queryTerm = ""
+# queryTerm = ""
 
-while queryTerm != "ZZEND":
-    queryTerm = input("Enter the term you are searching for: ")
+# while queryTerm != "ZZEND":
+#     queryTerm = input("Enter the term you are searching for: ")
     
-    # stem query
-    queryTerm_stemmed = []
-    for word in queryTerm.split():
-        p=PorterStemmer()
-        queryTerm_list = []
-        queryTerm_list = (p.stem(word, 0, len(word)-1))
-        queryTerm_stemmed.append("".join(queryTerm_list))
+#     # stem query
+#     queryTerm_stemmed = []
+#     for word in queryTerm.split():
+#         p=PorterStemmer()
+#         queryTerm_list = []
+#         queryTerm_list = (p.stem(word, 0, len(word)-1))
+#         queryTerm_stemmed.append("".join(queryTerm_list))
 
-    queryTerm_stemmed = ' '.join(queryTerm_stemmed)
+#     queryTerm_stemmed = ' '.join(queryTerm_stemmed)
 
-    rankings = retrieve_docs(ALPHA, queryTerm_stemmed, 10)
-    #print("Outputable rankings: " + str(rankings))
-    print("There are %d results" %len(rankings))
-    for i in range (0, len(rankings)):
-        if rankings[i][1] > 0:
-            print("Naive Bayes Ranking: %f" %rankings[i][1])
-            docID = rankings[i][0]
-            print("Doc ID: %s" %docID)
-            print("Title:")
-            print(corpus[docID]['title'])
-            print("Overview:")
-            print(corpus[docID]['overview'][:300] + "...")
-            print("\n")
+#     rankings = retrieve_docs(ALPHA, queryTerm_stemmed, 10)
+#     #print("Outputable rankings: " + str(rankings))
+#     print("There are %d results" %len(rankings))
+#     for i in range (0, len(rankings)):
+#         if rankings[i][1] > 0:
+#             print("Naive Bayes Ranking: %f" %rankings[i][1])
+#             docID = rankings[i][0]
+#             print("Doc ID: %s" %docID)
+#             print("Title:")
+#             print(corpus[docID]['title'])
+#             print("Overview:")
+#             print(corpus[docID]['overview'][:300] + "...")
+#             print("\n")
